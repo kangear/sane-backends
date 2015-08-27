@@ -6,6 +6,9 @@
 # This is your user passwd.
 PASSWD=123
 
+# 0. sth
+echo "$PASSWD" | sudo -S apt-get install libusb-dev build-essential libsane-dev libavahi-client-dev libavahi-glib-dev &&
+
 # 1. clean the dir
 make distclean ; 
 
