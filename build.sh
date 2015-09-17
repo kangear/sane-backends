@@ -13,13 +13,13 @@ if [ `id -u` -ne 0 ]; then
 fi
 
 # 0. sth
-echo y | apt-get install libusb-1.0-0-dev build-essential libsane-dev libavahi-client-dev libavahi-glib-dev sane sane-utils &&
+echo y | apt-get install libusb-1.0-0-dev build-essential libsane-dev libavahi-client-dev sane sane-utils &&
 
 # 1. clean the dir
 make distclean ; 
 
 # 2. configure
-./configure --prefix=/usr --libdir=/usr/lib/i386-linux-gnu --sysconfdir=/etc --localstatedir=/var  --enable-avahi BACKENDS="canon_dr test" --enable-libusb_1_0 &&
+./configure --prefix=/usr --libdir=/usr/lib/i386-linux-gnu --sysconfdir=/etc --localstatedir=/var BACKENDS="canon_dr test" --enable-libusb_1_0 &&
 
 # 3. build & install
 make -j32 && make install &&
