@@ -13,7 +13,7 @@ if [ `id -u` -ne 0 ]; then
 fi
 
 # 0. sth
-echo y | apt-get install libusb-1.0-0-dev build-essential libsane-dev libavahi-client-dev sane sane-utils &&
+echo y | apt-get install libusb-1.0-0-dev build-essential libsane-dev sane sane-utils &&
 
 # 1. clean the dir
 make distclean ; 
