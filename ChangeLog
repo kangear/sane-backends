@@ -1,3 +1,30 @@
+2015-09-16 Stéphane Voltz <stef.dev@free.fr>
+	* backend/niash.c: merged pu/protect-niash-option-access-315132 and
+	ifdef'ed unused code
+
+2015-09-16 Stéphane Voltz <stef.dev@free.fr>
+	* backend/pieusb.c: include sane/config.h first
+
+2015-09-14 Stéphane Voltz <stef.dev@free.fr>
+	* backend/bh.c: replace mktemp by mkstemp #300134
+
+2015-09-13 Paul Newall <p dot newalls at ntlworld dot com>
+	* backend/kodakaio.c:
+	redundant variable bitposn and redundant function kodakaio_rxflush
+	commented out.
+
+2015-09-09 Stéphane Voltz <stef.dev@free.fr>
+	* doc/sane-genesys.man, doc/descriptions/genesys.desc: No LiDE 120
+	support.
+
+2015-09-08 m. allan noah <kitno455 at gmail dot com>
+	* backend/artec_eplus48u.c: fix HOME env bug #315071 (from Jörg Frings-Fürst)
+
+2015-09-03 Rolf Bensch <rolf at bensch hyphen online dot de>
+	* backend/pixma_mp810.c: Canon Pixma MP990 needs specific reordering pixels
+	  for 4800 dpi, patch from Guillaume Courtois.
+	* backend/pixma.h, doc/descriptions/pixma.desc: Pixma backend version 0.17.22
+
 2015-08-20 Rolf Bensch <rolf at bensch hyphen online dot de>
 	* README.linux: add mandatory and optional development environment to
 	  install description
@@ -14,6 +41,14 @@
 	backend/s9036.c, backend/sp15c.[ch], backend/tamarack.c:
 	fix for memleak in sane_get_devices (bugs #300132 #300131 #300130 #300129
 	#300127 #300126 #300124 #300122 #300121 #300120)
+
+2015-08-10 Klaus Kämpf <kkaempf@suse.com>
+	* backend/pieusb.c, doc/descriptions/pieusb.desc, doc/sane-pieusb.man,
+          backend/pieusb_buffer.c, backend/pieusb_scancmd.c, backend/pieusb_specific.c,
+          backend/pieusb_usb.c:
+	  New scanners PIE PowerSlide 3600,3650,4000,5000 / Reflecta DigitDia 3600,
+          4000, 5000, 6000; ProScan 7200; CrystalScan 7200. These scanners need
+          further testing.
 
 2015-08-08 Stéphane Voltz <stef.dev@free.fr>
 	* backend/test.c: fix memleaks (#313553)

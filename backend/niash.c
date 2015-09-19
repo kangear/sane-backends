@@ -81,15 +81,14 @@ typedef enum
   optGroupEnhancement,
   optThreshold,
 
-
-  optLast,
-/* put temporarily disabled options here after optLast */
-
+#ifdef EXPERIMENTAL
   optGroupMisc,
   optLamp,
 
   optCalibrate,
-  optGamma                      /* analog gamma = single number */
+  optGamma,                      /* analog gamma = single number */
+#endif
+  optLast
 } EOptionIndex;
 
 
@@ -150,10 +149,12 @@ static const SANE_Range rangeGammaTable = { 0, 255, 1 };
 /* available scanner resolutions */
 static const SANE_Int setResolutions[] = { 4, 75, 150, 300, 600 };
 
+#ifdef EXPERIMENTAL
 /* range of an analog gamma */
 static const SANE_Range rangeGamma = { SANE_FIX (0.25), SANE_FIX (4.0),
   SANE_FIX (0.0)
 };
+#endif
 
 /* interpolate a sane gamma table to a hardware appropriate one
    just in case the sane gamma table would be smaller */
@@ -260,18 +261,15 @@ _bytesPerLineColor (int pixelsPerLine)
 
 /* dummy*/
 static void
-_rgb2rgb (unsigned char *buffer, int pixels, int threshold)
+_rgb2rgb (unsigned char __sane_unused__ *buffer, int __sane_unused__ pixels, int __sane_unused__ threshold)
 {
   /* make the compiler content */
-  buffer = buffer;
-  pixels = pixels;
-  threshold = threshold;
 }
 
 
 /* convert 24bit RGB to 8bit GRAY */
 static void
-_rgb2gray (unsigned char *buffer, int pixels, int threshold)
+_rgb2gray (unsigned char *buffer, int pixels, int __sane_unused__ threshold)
 {
 #define WEIGHT_R 27
 #define WEIGHT_G 54
@@ -282,9 +280,6 @@ _rgb2gray (unsigned char *buffer, int pixels, int threshold)
   int nbyte = pixels * BYTES_PER_PIXEL_COLOR;
   int acc = 0;
   int x;
-
-  /* make the compiler content */
-  threshold = threshold;
 
   for (x = 0; x < nbyte; ++x)
     {
@@ -685,6 +680,7 @@ _InitOptions (TScanner * s)
           pDesc->size = 0;
           break;
 
+#ifdef EXPERIMENTAL
         case optGamma:
           pDesc->name = SANE_NAME_ANALOG_GAMMA;
           pDesc->title = SANE_TITLE_ANALOG_GAMMA;
@@ -695,6 +691,7 @@ _InitOptions (TScanner * s)
           pDesc->cap = SANE_CAP_SOFT_SELECT | SANE_CAP_SOFT_DETECT;
           pVal->w = startUpGamma;
           break;
+#endif
 
         case optGammaTable:
           pDesc->name = SANE_NAME_GAMMA_VECTOR;
@@ -707,6 +704,7 @@ _InitOptions (TScanner * s)
           pVal->wa = s->aGammaTable;
           break;
 
+#ifdef EXPERIMENTAL
         case optGroupMisc:
           pDesc->title = SANE_I18N ("Miscellaneous");
           pDesc->type = SANE_TYPE_GROUP;
@@ -731,7 +729,7 @@ _InitOptions (TScanner * s)
           pDesc->cap = SANE_CAP_SOFT_SELECT;
           pDesc->size = 0;
           break;
-
+#endif
         case optGroupMode:
           pDesc->title = SANE_I18N ("Scan Mode");
           pDesc->desc = "";
@@ -824,11 +822,8 @@ _ReportDevice (TScannerModel * pModel, const char *pszDeviceName)
 /*****************************************************************************/
 
 SANE_Status
-sane_init (SANE_Int * piVersion, SANE_Auth_Callback pfnAuth)
+sane_init (SANE_Int * piVersion, SANE_Auth_Callback __sane_unused__ pfnAuth)
 {
-  /* prevent compiler from complaing about unused parameters */
-  pfnAuth = pfnAuth;
-
   DBG_INIT ();
   DBG (DBG_MSG, "sane_init\n");
 
@@ -869,14 +864,12 @@ sane_exit (void)
 
 
 SANE_Status
-sane_get_devices (const SANE_Device *** device_list, SANE_Bool local_only)
+sane_get_devices (const SANE_Device *** device_list, SANE_Bool __sane_unused__ local_only)
 {
   TDevListEntry *pDev;
   int i;
 
   DBG (DBG_MSG, "sane_get_devices\n");
-
-  local_only = local_only;
 
   if (_pSaneDevList)
     {
@@ -984,16 +977,31 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
                      void *pVal, SANE_Int * pInfo)
 {
   TScanner *s;
-  SANE_Bool fVal;
   static char szTable[100];
   int *pi;
   int i;
   SANE_Int info;
-  SANE_Bool fLampIsOn;
   SANE_Status status;
+#ifdef EXPERIMENTAL
+  SANE_Bool fLampIsOn;
+  SANE_Bool fVal;
+#endif
   SANE_Bool fSame;
 
   DBG (DBG_MSG, "sane_control_option: option %d, action %d\n", n, Action);
+
+  if ((n < optCount) || (n >= optLast))
+    {
+      return SANE_STATUS_UNSUPPORTED;
+    }
+
+  if (Action == SANE_ACTION_GET_VALUE || Action == SANE_ACTION_SET_VALUE)
+    {
+      if (pVal == NULL)
+        {
+          return SANE_STATUS_INVAL;
+        }
+    }
 
   s = (TScanner *) h;
   info = 0;
@@ -1007,7 +1015,9 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
           /* Get options of type SANE_Word */
         case optCount:
         case optDPI:
+#ifdef EXPERIMENTAL
         case optGamma:
+#endif
         case optTLX:
         case optTLY:
         case optBRX:
@@ -1031,6 +1041,7 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
           strcpy ((char *) pVal, modeList[s->aValues[optMode].w]);
           break;
 
+#ifdef EXPERIMENTAL
           /* Get options of type SANE_Bool */
         case optLamp:
           GetLamp (&s->HWParams, &fLampIsOn);
@@ -1041,6 +1052,7 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
           /*  although this option has nothing to read,
              it's added here to avoid a warning when running scanimage --help */
           break;
+#endif
 
         default:
           DBG (DBG_MSG, "SANE_ACTION_GET_VALUE: Invalid option (%d)\n", n);
@@ -1061,7 +1073,9 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
         case optCount:
           return SANE_STATUS_INVAL;
 
+#ifdef EXPERIMENTAL
         case optGamma:
+#endif
         case optThreshold:
         case optDPI:
 
@@ -1089,6 +1103,7 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
           DBG (DBG_MSG,
                "sane_control_option: SANE_ACTION_SET_VALUE %d = %d\n", n,
                (int) s->aValues[n].w);
+#ifdef EXPERIMENTAL
           if (n == optGamma)
             {
               if (!fSame && optLast > optGammaTable)
@@ -1097,6 +1112,7 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
                 }
               _SetScalarGamma (s->aGammaTable, s->aValues[n].w);
             }
+#endif
           break;
 
         case optGammaTable:
@@ -1159,6 +1175,7 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
 
 
 
+#ifdef EXPERIMENTAL
         case optLamp:
           fVal = *(SANE_Bool *) pVal;
           DBG (DBG_MSG, "lamp %s\n", fVal ? "on" : "off");
@@ -1171,6 +1188,7 @@ sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action Action,
         case optCalibrate:
 /*       SimpleCalib(&s->HWParams); */
           break;
+#endif
 
         default:
           DBG (DBG_ERR, "SANE_ACTION_SET_VALUE: Invalid option (%d)\n", n);
@@ -1458,12 +1476,9 @@ sane_cancel (SANE_Handle h)
 
 
 SANE_Status
-sane_set_io_mode (SANE_Handle h, SANE_Bool m)
+sane_set_io_mode (SANE_Handle __sane_unused__ h, SANE_Bool m)
 {
   DBG (DBG_MSG, "sane_set_io_mode %s\n", m ? "non-blocking" : "blocking");
-
-  /* prevent compiler from complaining about unused parameters */
-  h = h;
 
   if (m)
     {
@@ -1474,13 +1489,8 @@ sane_set_io_mode (SANE_Handle h, SANE_Bool m)
 
 
 SANE_Status
-sane_get_select_fd (SANE_Handle h, SANE_Int * fd)
+sane_get_select_fd (SANE_Handle __sane_unused__ h, SANE_Int * __sane_unused__ fd)
 {
   DBG (DBG_MSG, "sane_select_fd\n");
-
-  /* prevent compiler from complaining about unused parameters */
-  h = h;
-  fd = fd;
-
   return SANE_STATUS_UNSUPPORTED;
 }

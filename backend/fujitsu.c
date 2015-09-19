@@ -571,6 +571,12 @@
          - reorder scanner sections in init_model chronologically
       v125 2014-12-16, MAN
          - remove USB packet counting code from v123, fix sanei_usb instead
+      v126 2015-08-23, MAN
+         - initial support for iX100
+         - add late_lut support for iX500/iX100
+      v127 2015-08-25, MAN
+         - separate iX100 from iX500 settings
+         - iX100 has gray and lineart
 
    SANE FLOW DIAGRAM
 
@@ -620,7 +626,7 @@
 #include "fujitsu.h"
 
 #define DEBUG 1
-#define BUILD 125
+#define BUILD 127
 
 /* values for SANE_DEBUG_FUJITSU env var:
  - errors           5
@@ -2271,6 +2277,7 @@ init_model (struct fujitsu *s)
 
     /* weirdness */
     s->need_q_table = 1;
+    s->late_lut = 1;
     s->need_diag_preread = 1;
     s->ppl_mod_by_mode[MODE_COLOR] = 2;
     s->hopper_before_op = 1;
@@ -2282,6 +2289,26 @@ init_model (struct fujitsu *s)
     /* we have to simulate these in software*/
     s->can_mode[MODE_LINEART] = 2;
     s->can_mode[MODE_GRAYSCALE] = 2;
+
+    /* dont bother with this one */
+    s->can_mode[MODE_HALFTONE] = 0;
+  }
+
+  /*mostly copied from iX500*/
+  else if (strstr (s->model_name,"iX100")){
+    /* locks up scanner if we try to auto detect */
+    s->has_MS_lamp = 0;
+
+    /* weirdness */
+    s->need_q_table = 1;
+    s->late_lut = 1;
+    s->need_diag_preread = 1;
+    s->ppl_mod_by_mode[MODE_COLOR] = 2;
+    s->hopper_before_op = 1;
+    s->no_wait_after_op = 1;
+
+    /* lies */
+    s->adbits = 8;
 
     /* dont bother with this one */
     s->can_mode[MODE_HALFTONE] = 0;
@@ -6899,6 +6926,13 @@ sane_start (SANE_Handle handle)
       if (ret != SANE_STATUS_GOOD)
         DBG (5, "sane_start: WARNING: cannot send_endorser %d\n", ret);
 
+      /* send lut if scanner has no hardware brightness/contrast */
+      if (!s->late_lut && (!s->brightness_steps || !s->contrast_steps)){
+        ret = send_lut(s);
+        if (ret != SANE_STATUS_GOOD)
+          DBG (5, "sane_start: WARNING: cannot early send_lut %d\n", ret);
+      }
+    
       /* set window command */
       ret = set_window(s);
       if (ret != SANE_STATUS_GOOD) {
@@ -6907,10 +6941,10 @@ sane_start (SANE_Handle handle)
       }
     
       /* send lut if scanner has no hardware brightness/contrast */
-      if (!s->brightness_steps || !s->contrast_steps){
+      if (s->late_lut && (!s->brightness_steps || !s->contrast_steps)){
         ret = send_lut(s);
         if (ret != SANE_STATUS_GOOD)
-          DBG (5, "sane_start: WARNING: cannot send_lut %d\n", ret);
+          DBG (5, "sane_start: WARNING: cannot late send_lut %d\n", ret);
       }
     
       /* some scanners need the q table sent, even when not scanning jpeg */
