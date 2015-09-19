@@ -19,7 +19,17 @@ echo y | apt-get install libusb-1.0-0-dev build-essential libsane-dev sane sane-
 make distclean ; 
 
 # 2. configure
-./configure --prefix=/usr --libdir=/usr/lib/i386-linux-gnu --sysconfdir=/etc --localstatedir=/var BACKENDS="canon_dr test" --enable-libusb_1_0 &&
+./configure \
+--prefix=/usr \
+--libdir=/usr/lib/arm-linux-gnueabihf \
+--sysconfdir=/etc \
+--localstatedir=/var \
+BACKENDS="canon_dr" \
+PRELOADABLE_BACKENDS="canon_dr" \
+--enable-libusb_1_0 \
+--enable-static \
+--disable-dynamic \
+--enable-preload &&
 
 # 3. build & install
 make -j32 && make install &&
