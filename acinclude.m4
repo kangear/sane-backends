@@ -312,6 +312,19 @@ AC_DEFUN([SANE_CHECK_TIFF],
   AC_SUBST(TIFF_LIBS)
 ])
 
+AC_DEFUN([SANE_CHECK_PNG],
+[
+  AC_CHECK_LIB(png,png_init_io,
+  [
+    AC_CHECK_HEADER(png.h,
+    [sane_cv_use_libpng="yes"; PNG_LIBS="-lpng"],)
+  ],)
+  if test "$sane_cv_use_libpng" = "yes" ; then
+    AC_DEFINE(HAVE_LIBPNG,1,[Define to 1 if you have the libpng library.])
+  fi
+  AC_SUBST(PNG_LIBS)
+])
+
 #
 # Checks for pthread support
 AC_DEFUN([SANE_CHECK_LOCKING],
@@ -592,14 +605,14 @@ for be in ${BACKENDS}; do
 
     mustek_pp)
     if test "${sane_cv_use_libieee1284}" != "yes" && test "${enable_parport_directio}" != "yes"; then
-      echo "*** $be backend requires libieee1284 and paraport-directio libraries - $DISABLE_MSG"
+      echo "*** $be backend requires libieee1284 or parport-directio libraries - $DISABLE_MSG"
       backend_supported="no"
     fi
     ;;
 
     dell1600n_net) 
     if test "${sane_cv_use_libjpeg}" != "yes" || test "${sane_cv_use_libtiff}" != "yes"; then
-      echo "*** $be backend requires JPEG and/or TIFF library - $DISABLE_MSG"
+      echo "*** $be backend requires JPEG and TIFF library - $DISABLE_MSG"
       backend_supported="no"
     fi
     ;;
@@ -627,9 +640,9 @@ for be in ${BACKENDS}; do
     ;;
 
     qcam)
-    if test "${ac_cv_func_ioperm}" = "no" \
+    if ( test "${ac_cv_func_ioperm}" = "no" || test "${sane_cv_have_sys_io_h_with_inb_outb}" = "no" )\
       && test "${ac_cv_func__portaccess}" = "no"; then
-      echo "*** $be backend requires ioperm and portaccess functions - $DISABLE_MSG"
+      echo "*** $be backend requires (ioperm, inb and outb) or portaccess functions - $DISABLE_MSG"
       backend_supported="no"
     fi
     ;;

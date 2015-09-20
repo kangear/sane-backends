@@ -290,6 +290,13 @@ init_options (V4L_Scanner * s)
   s->val[OPT_MODE].s = strdup (mode_list[0]);
   if (!s->val[OPT_MODE].s)
     return SANE_STATUS_NO_MEM;
+  s->opt[OPT_MODE].size = 1; /* '\0' */
+  for (i = 0; mode_list[i] != 0; ++i)
+    {
+      int len = strlen(mode_list[i]) + 1;
+      if (s->opt[OPT_MODE].size < len)
+        s->opt[OPT_MODE].size = len;
+    }
 
   /* channel */
   s->opt[OPT_CHANNEL].name = "channel";
@@ -305,6 +312,13 @@ init_options (V4L_Scanner * s)
     return SANE_STATUS_NO_MEM;
   if (s->channel[0] == 0 || s->channel[1] == 0)
     s->opt[OPT_CHANNEL].cap |= SANE_CAP_INACTIVE;
+  s->opt[OPT_CHANNEL].size = 1; /* '\0' */
+  for (i = 0; s->channel[i] != 0; ++i)
+    {
+      int len = strlen(s->channel[i]) + 1;
+      if (s->opt[OPT_CHANNEL].size < len)
+        s->opt[OPT_CHANNEL].size = len;
+    }
 
   /* "Geometry" group: */
   s->opt[OPT_GEOMETRY_GROUP].title = "Geometry";

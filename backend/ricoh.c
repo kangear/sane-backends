@@ -222,11 +222,13 @@ attach (const char *devnam, Ricoh_Device ** devp)
 
   dev->sane.name = strdup (devnam);
   dev->sane.vendor = "RICOH";
-  str = malloc (16 + 1);
-  memset (str, 0, sizeof (str));
-  strncpy (str, (char *)ibuf.product, sizeof(ibuf.product));
-  strncpy (str + sizeof(ibuf.revision), (char *)ibuf.revision, sizeof(ibuf.revision));
-  str[sizeof(ibuf.product) + sizeof(ibuf.revision)] = '\0';
+  str = malloc (sizeof(ibuf.product) + sizeof(ibuf.revision) + 1);
+  if (str)
+    {
+      str[0] = '\0';
+      strncat (str, (char *)ibuf.product, sizeof(ibuf.product));
+      strncat (str, (char *)ibuf.revision, sizeof(ibuf.revision));
+    }
   dev->sane.model = str;
   dev->sane.type = "flatbed scanner";
 
